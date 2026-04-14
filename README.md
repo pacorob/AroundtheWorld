@@ -23,19 +23,19 @@ Suggested repository name:
 
 ## Screenshots
 
-Add your own screenshots in:
+The screenshots are already included in this package and referenced with relative paths that work from the repository root.
 
-- `assets/screenshots/home-screen.png`
-- `assets/screenshots/question-round.png`
-- `assets/screenshots/interlude-video.png`
+<p>
+  <img src="./assets/screenshots/home-screen.png" alt="Home screen" width="900">
+</p>
+<p>
+  <img src="./assets/screenshots/question-round.png" alt="Question round" width="900">
+</p>
+<p>
+  <img src="./assets/screenshots/interlude-video.png" alt="Interlude video" width="900">
+</p>
 
-Example markdown once you add them:
-
-```md
-![Home screen](./assets/screenshots/home-screen.png)
-![Question round](./assets/screenshots/question-round.png)
-![Interlude video](./assets/screenshots/interlude-video.png)
-```
+If you ever replace them, keep the same filenames so the README continues to work without further edits.
 
 ## Deploy with GitHub Pages
 
