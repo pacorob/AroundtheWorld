@@ -182,13 +182,13 @@
     };
 
     const INTERLUDES = [
-      {title:'Jetpack luggage incident', text:'Your suitcase attempts an unauthorized takeoff.', src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
-      {title:'Camel boarding delay', text:'Gate changes are always more dramatic in the desert.', src:'https://www.w3schools.com/html/mov_bbb.mp4'},
-      {title:'Mystery scooter parade', text:'A tiny convoy escorts you to the next continent.', src:'https://www.w3schools.com/html/movie.mp4'}
+      { title:'Runway refuel', text:'A scenic pit stop for your next journey.', src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
+      { title:'Harbor transfer', text:'A quick transfer between sea lanes and city streets.', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+      { title:'Station break', text:'A cheerful pause before the next departure.', src:'https://www.w3schools.com/html/movie.mp4' }
     ];
 
     const QUESTIONS = [
-      {cat:'capitals', diff:'easy', q:{en:'What is the capital of Canada?', nl:'Wat is de hoofdstad van Canada?'}, choices:['Ottawa','Toronto','Vancouver','Montreal'], answer:0, lat:45.4215, lon:-75.6972},
+      {cat:'capitals', diff:'easy', q:{en:'What is the capital of Canada?', nl:'Wat is de hoofdstad van Canada?'}, choices:['Ottawa','Toronto','Vancouver','Montreal'], answer:0, lat:45.4215, lon:-75.6972, year:1867, fact:{en:'Canada chose Ottawa as capital in the 19th century.', nl:'Canada koos Ottawa als hoofdstad in de 19e eeuw.'}},
       {cat:'capitals', diff:'easy', q:{en:'What is the capital of Australia?', nl:'Wat is de hoofdstad van Australië?'}, choices:['Sydney','Canberra','Melbourne','Perth'], answer:1, lat:-35.2809, lon:149.13},
       {cat:'capitals', diff:'hard', q:{en:'What is the capital of Kazakhstan?', nl:'Wat is de hoofdstad van Kazachstan?'}, choices:['Almaty','Astana','Shymkent','Aktobe'], answer:1, lat:51.1694, lon:71.4491},
       {cat:'flags', diff:'easy', q:{en:'Which country uses this maple leaf flag?', nl:'Welk land gebruikt deze vlag met esdoornblad?'}, choices:['Austria','Canada','Peru','Denmark'], answer:1, lat:56.1304, lon:-106.3468, clue:{img:'https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg', caption:{en:'National flag clue', nl:'Hint van de nationale vlag'}}},
@@ -227,20 +227,28 @@
       state.totalRounds = demo ? 5 : +$('#roundCount').value;
       state.round = 1; state.current = 0; state.activePlayer = 0;
       const diff = $('#difficulty').value;
-      const pool = QUESTIONS.filter(q => diff==='mixed' ? true : q.diff===diff);
-      state.questions = shuffled(pool).slice(0, state.totalRounds);
+      const basePool = QUESTIONS.filter(q => diff==='mixed' ? true : q.diff===diff);
+      const varied = shuffled(basePool).concat(shuffled(QUESTIONS.filter(q => !basePool.includes(q))));
+      state.questions = varied.slice(0, state.totalRounds);
       els.setupView.classList.add('hidden'); els.gameView.classList.remove('hidden');
       ensureAudio(); nextQuestion(true);
     }
 
     function ensureAudio(){ if(!state.audioReady){ synth = window.speechSynthesis; state.audioReady = true; beep(440,.06); }}
     function beep(freq=440,dur=.1,type='sine'){ try{ const ctx = window._ctx || (window._ctx = new (window.AudioContext||window.webkitAudioContext)()); const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination); g.gain.value=.04; o.start(); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+dur); o.stop(ctx.currentTime+dur);}catch(e){} }
-    function speak(text){ if(!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = state.lang==='nl' ? 'nl-NL' : 'en-US'; u.rate = 1.02; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+    function speak(text){ if(!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = state.lang==='nl' ? 'nl-NL' : 'en-US'; u.rate = state.lang==='nl' ? 1.0 : 0.98;
+      u.pitch = 1.08;
+      u.volume = 1;
+      const voices = speechSynthesis.getVoices().filter(v => (state.lang==='nl' ? v.lang.startsWith('nl') : v.lang.startsWith('en')));
+      const preferred = voices.find(v => /Google|Samantha|Daniel|Karen|Tessa|Nicky|Microsoft|Natural/i.test(v.name)) || voices[0];
+      if (preferred) u.voice = preferred; speechSynthesis.cancel(); speechSynthesis.speak(u); }
 
     function nextQuestion(first=false){
       clearInterval(countdown); state.answered=false; els.next.classList.add('hidden');
-      if(!first){ state.current++; state.round++; state.activePlayer = (state.activePlayer + 1) % state.players.length; }
+      if(!first){ state.current++; state.activePlayer = (state.activePlayer + 1) % state.players.length; }
       if(state.current >= state.questions.length){ renderFinal(); return; }
+      state.round = Math.floor(state.current / state.players.length) + 1;
+      if(!first && state.current > 0 && state.current % state.players.length === 0){ showInterlude(); return; }
       const q = state.questions[state.current]; state.timer = 20; state.remainingMiles = state.baseMiles; renderQuestion(q); rotateTo(q.lat,q.lon); tick(); countdown = setInterval(tick,1000);
     }
 
@@ -256,6 +264,7 @@
       els.turn.textContent = `${t.turn}: ${state.players[state.activePlayer].name}`; els.diffMeta.textContent = `${t.difficultyMeta}: ${t[q.diff] || q.diff}`;
       els.round.textContent = `${state.round} / ${state.totalRounds}`; renderScoreboard();
       if(q.clue){ els.clueWrap.classList.remove('hidden'); els.clueImage.src = q.clue.img; els.clueCaption.textContent = q.clue.caption[state.lang]; els.clueTitle.textContent = t.clue; }
+      else if(q.fact){ els.clueWrap.classList.remove('hidden'); els.clueImage.removeAttribute('src'); els.clueImage.alt=''; els.clueTitle.textContent = t.clue; els.clueCaption.textContent = q.fact[state.lang] + (q.year ? ` · ${q.year}` : ''); }
       else { els.clueWrap.classList.add('hidden'); }
       els.choices.innerHTML=''; q.choices.forEach((choice,index)=>{ const btn=document.createElement('button'); btn.className='choice'; btn.textContent=choice; btn.addEventListener('click',()=>lockChoices(index)); els.choices.appendChild(btn); });
       updateLeader();
@@ -265,14 +274,31 @@
       if(state.answered) return; state.answered=true; clearInterval(countdown);
       const q = state.questions[state.current]; const buttons=[...document.querySelectorAll('.choice')];
       buttons.forEach((btn,i)=>{ btn.disabled=true; if(i===q.answer) btn.classList.add('correct'); if(i===selected && i!==q.answer) btn.classList.add('wrong'); });
-      const t = STRINGS[state.lang];
-      if(selected===q.answer){ const gain = Math.max(500,state.remainingMiles); state.players[state.activePlayer].score += gain; beep(660,.08,'triangle'); beep(880,.12,'triangle'); speak(state.lang==='nl' ? `Goed gedaan ${state.players[state.activePlayer].name}` : `Correct ${state.players[state.activePlayer].name}`); }
-      else { beep(240,.14,'sawtooth'); speak(state.lang==='nl' ? `Helaas. Het juiste antwoord is ${q.choices[q.answer]}` : `Sorry. The correct answer is ${q.choices[q.answer]}`); }
+      if(selected===q.answer){
+        const gain = Math.max(500,state.remainingMiles); state.players[state.activePlayer].score += gain; beep(660,.08,'triangle'); beep(880,.12,'triangle');
+        const cheers = state.lang==='nl'
+          ? [
+              `Wow, geweldig, ${state.players[state.activePlayer].name}!`,
+              `Fantastisch, ${state.players[state.activePlayer].name} — je kent je topografie!`,
+              `Amazing, ${state.players[state.activePlayer].name}! Je hebt echt verstand van aardrijkskunde.`
+            ]
+          : [
+              `Wow, amazing, ${state.players[state.activePlayer].name}!`,
+              `You really know your stuff, ${state.players[state.activePlayer].name}!`,
+              `Fantastic answer, ${state.players[state.activePlayer].name} — great geography brain!`
+            ];
+        speak(cheers[Math.floor(Math.random()*cheers.length)]);
+      } else {
+        beep(240,.14,'sawtooth');
+        const misses = state.lang==='nl'
+          ? [`Bijna! Het juiste antwoord is ${q.choices[q.answer]}.`,`Niet deze keer. Het juiste antwoord is ${q.choices[q.answer]}.`]
+          : [`Close! The correct answer is ${q.choices[q.answer]}.`,`Not quite. The correct answer is ${q.choices[q.answer]}.`];
+        speak(misses[Math.floor(Math.random()*misses.length)]);
+      }
       renderScoreboard(); updateLeader(); els.next.classList.remove('hidden');
-      if((state.round % 3) === 0 || state.round === state.totalRounds){ setTimeout(showInterlude, 900); }
+      if((state.current + 1) % state.players.length === 0 || state.current === state.questions.length - 1){ setTimeout(showInterlude, 900); }
     }
-
-    function renderScoreboard(){
+function renderScoreboard(){
       els.scoreboard.innerHTML='';
       state.players.forEach((p,i)=>{ const row=document.createElement('div'); row.className='player'+(i===state.activePlayer?' active':''); row.innerHTML=`<span>${p.name}</span><strong>${p.score.toLocaleString()}</strong>`; els.scoreboard.appendChild(row); });
     }
@@ -282,7 +308,7 @@
       els.category.textContent=t.final; els.question.textContent=`${t.winner}: ${winner.name}`; els.turn.textContent=''; els.diffMeta.textContent=''; els.choices.innerHTML=''; els.clueWrap.classList.add('hidden'); els.next.classList.add('hidden'); renderScoreboard(); updateLeader();
       speak(state.lang==='nl' ? `Winnaar is ${winner.name}` : `Winner is ${winner.name}`);
     }
-    function showInterlude(){ const item=INTERLUDES[state.round % INTERLUDES.length]; $('#interludeTitle').textContent=item.title; $('#interludeText').textContent=item.text; els.interludeVideo.src=item.src; els.interlude.classList.add('open'); els.interlude.setAttribute('aria-hidden','false'); els.interludeVideo.play().catch(()=>{}); }
+    function showInterlude(){ const item=INTERLUDES[(state.current) % INTERLUDES.length]; $('#interludeTitle').textContent=item.title; $('#interludeText').textContent=item.text; els.interludeVideo.src=item.src; els.interlude.classList.add('open'); els.interlude.setAttribute('aria-hidden','false'); const playVideo=()=>els.interludeVideo.play().catch(()=>{}); if(els.interludeVideo.readyState>=1) playVideo(); else els.interludeVideo.addEventListener('loadedmetadata', playVideo, { once:true }); }
     function closeInterlude(){ els.interlude.classList.remove('open'); els.interlude.setAttribute('aria-hidden','true'); els.interludeVideo.pause(); }
 
     function initGlobe(){
