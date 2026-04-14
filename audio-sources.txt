@@ -1,0 +1,2 @@
+Pixabay-style travel/transport audio fragments are referenced by direct CDN links in the game.
+Speech synthesis now prefers more natural voices when the browser exposes them.
