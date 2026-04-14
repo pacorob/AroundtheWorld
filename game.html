@@ -212,7 +212,6 @@
       round:$('#roundStat'), miles:$('#milesStat'), timer:$('#timerStat'), leader:$('#leaderStat'), scoreboard:$('#scoreboard'), next:$('#nextBtn'), restart:$('#restartBtn'), clueWrap:$('#clueWrap'), clueImage:$('#clueImage'), clueCaption:$('#clueCaption'), clueTitle:$('#clueTitle'), interlude:$('#interlude'), interludeVideo:$('#interludeVideo')
     };
     let countdown, synth, renderer, scene, camera, globe, pin;
-    const AUDIO_FRAGMENTS = ['https://cdn.pixabay.com/download/audio/2022/03/15/audio_8b1d3df0d8.mp3?filename=travel-ambient-110836.mp3','https://cdn.pixabay.com/download/audio/2022/03/15/audio_3c0c0d7f2e.mp3?filename=travel-whoosh-110838.mp3'];
 
     function applyStrings(){
       const t = STRINGS[state.lang];
@@ -237,19 +236,20 @@
 
     function ensureAudio(){ if(!state.audioReady){ synth = window.speechSynthesis; state.audioReady = true; beep(440,.06); }}
     function beep(freq=440,dur=.1,type='sine'){ try{ const ctx = window._ctx || (window._ctx = new (window.AudioContext||window.webkitAudioContext)()); const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination); g.gain.value=.04; o.start(); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+dur); o.stop(ctx.currentTime+dur);}catch(e){} }
-    function speak(text){
-      if(!('speechSynthesis' in window)) return;
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = state.lang==='nl' ? 'nl-NL' : 'en-US';
-      u.rate = state.lang==='nl' ? 0.98 : 0.94;
-      u.pitch = 1.15;
+    function speak(text){ if(!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = state.lang==='nl' ? 'nl-NL' : 'en-US'; u.rate = state.lang==='nl' ? 1.0 : 0.98;
+      u.pitch = 1.08;
       u.volume = 1;
-      const voices = (speechSynthesis.getVoices && speechSynthesis.getVoices()) || [];
-      const candidates = voices.filter(v => (state.lang==='nl' ? /^nl/i.test(v.lang) : /^en/i.test(v.lang)));
-      const preferred = candidates.find(v => /(Samantha|Daniel|Karen|Tessa|Nicky|Moira|Fred|Siri|Microsoft|Google|Natural)/i.test(v.name)) || candidates[0];
-      if (preferred) u.voice = preferred;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
+      const voices = speechSynthesis.getVoices().filter(v => (state.lang==='nl' ? v.lang.startsWith('nl') : v.lang.startsWith('en')));
+      const preferred = voices.find(v => /Google|Samantha|Daniel|Karen|Tessa|Nicky|Microsoft|Natural/i.test(v.name)) || voices[0];
+      if (preferred) u.voice = preferred; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+
+    function nextQuestion(first=false){
+      clearInterval(countdown); state.answered=false; els.next.classList.add('hidden');
+      if(!first){ state.current++; state.activePlayer = (state.activePlayer + 1) % state.players.length; }
+      if(state.current >= state.questions.length){ renderFinal(); return; }
+      state.round = Math.floor(state.current / state.players.length) + 1;
+      if(!first && state.current > 0 && state.current % state.players.length === 0){ showInterlude(); return; }
+      const q = state.questions[state.current]; state.timer = 20; state.remainingMiles = state.baseMiles; renderQuestion(q); rotateTo(q.lat,q.lon); tick(); countdown = setInterval(tick,1000);
     }
 
     function tick(){
@@ -309,7 +309,7 @@ function renderScoreboard(){
       speak(state.lang==='nl' ? `Winnaar is ${winner.name}` : `Winner is ${winner.name}`);
     }
     function showInterlude(){ const item=INTERLUDES[(state.current) % INTERLUDES.length]; $('#interludeTitle').textContent=item.title; $('#interludeText').textContent=item.text; els.interludeVideo.src=item.src; els.interlude.classList.add('open'); els.interlude.setAttribute('aria-hidden','false'); const playVideo=()=>els.interludeVideo.play().catch(()=>{}); if(els.interludeVideo.readyState>=1) playVideo(); else els.interludeVideo.addEventListener('loadedmetadata', playVideo, { once:true }); }
-    function closeInterlude(){ els.interlude.classList.remove('open'); els.interlude.setAttribute('aria-hidden','true'); els.interludeVideo.pause(); els.interludeVideo.removeAttribute('src'); els.interludeVideo.load(); }
+    function closeInterlude(){ els.interlude.classList.remove('open'); els.interlude.setAttribute('aria-hidden','true'); els.interludeVideo.pause(); }
 
     function initGlobe(){
       const mount = document.getElementById('globe');
