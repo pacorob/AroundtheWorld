@@ -14,12 +14,12 @@ Retro-inspired geography trivia game prepared as a polished GitHub Pages project
 
 Search and replace these placeholders:
 
-- `YOUR-USERNAME`
-- `YOUR-REPO`
+- `pacorob`
+- `Aroundtheworld`
 
 Suggested repository name:
 
-- `around-the-world-deluxe`
+- `Aroundtheworld`
 
 ## Screenshots
 
@@ -41,7 +41,7 @@ Example markdown once you add them:
 
 ### Branch deploy
 
-1. Create a new repository, for example `around-the-world-deluxe`.
+1. Create a new repository, for example `Aroundtheworld`.
 2. Upload all files from this package to the repository root.
 3. Go to **Settings > Pages**.
 4. Choose **Deploy from a branch**.
