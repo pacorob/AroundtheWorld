@@ -1,8 +1,0 @@
-This package contains original code for the game shell.
-
-External runtime dependencies:
-- Three.js via CDN
-- Google Fonts via CDN
-
-External streamed demo media and Wikimedia-hosted clue images are referenced by URL from the app and are not bundled locally.
-Before commercial or public production use, review and replace any media with your own licensed assets if needed.
