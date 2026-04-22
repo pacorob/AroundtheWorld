@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d151a" />
+  <meta name="description" content="Retro-inspired around-the-world geography trivia game for GitHub Pages, iPhone, and iPad." />
+  <title>Around the World Deluxe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --color-bg:#f5f1e8; --color-surface:#fbf9f4; --color-surface-2:#fffdfa; --color-surface-offset:#ece5d8; --color-border:#cfc3ae;
+      --color-text:#1e1a15; --color-muted:#6d665c; --color-faint:#958c80; --color-primary:#0d6a74; --color-primary-2:#d48e19; --color-good:#3c7b25; --color-bad:#a03f37;
+      --shadow:0 10px 30px rgba(20,20,20,.12); --radius:18px;
+    }
+    [data-theme="dark"] {
+      --color-bg:#0d151a; --color-surface:#122028; --color-surface-2:#182933; --color-surface-offset:#1d3440; --color-border:#2d4e5d;
+      --color-text:#ecf4f6; --color-muted:#a5bac2; --color-faint:#77909a; --color-primary:#71d0db; --color-primary-2:#f1b84a; --color-good:#7bd45e; --color-bad:#ff8e84;
+      --shadow:0 18px 40px rgba(0,0,0,.35); --radius:18px;
+    }
+    *{box-sizing:border-box} html,body{margin:0;padding:0} body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at top,#1d3440,transparent 40%),var(--color-bg);color:var(--color-text);min-height:100vh}
+    button,input,select{font:inherit}
+    .shell{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;color:var(--color-primary-2)}
+    .brand h1{font:800 clamp(1.2rem,2.5vw,2rem)/1 Orbitron,sans-serif;letter-spacing:.08em;text-transform:uppercase;margin:0}
+    .brand p{margin:2px 0 0;color:var(--color-muted);font-size:.9rem}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .pill,.btn{border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);border-radius:999px;padding:12px 16px;min-height:44px}
+    .btn.primary{background:var(--color-primary);color:#06262a;border-color:transparent;font-weight:800}
+    .btn.gold{background:var(--color-primary-2);color:#2b1900;border-color:transparent;font-weight:800}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .panel{background:linear-gradient(180deg,var(--color-surface),var(--color-surface-2));border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel-inner{padding:16px}
+    #globeWrap{position:relative;min-height:420px;overflow:hidden}
+    #globe{height:420px;border-radius:calc(var(--radius) - 2px)}
+    .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+    .stat{padding:12px;border:1px solid var(--color-border);border-radius:14px;background:rgba(255,255,255,.03)}
+    .stat span{display:block;color:var(--color-muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}
+    .stat strong{display:block;font-size:1.25rem;margin-top:4px;font-variant-numeric:tabular-nums}
+    .question-card{display:grid;gap:14px}
+    .eyebrow{color:var(--color-primary-2);font:700 .78rem/1 Orbitron,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+    h2{margin:0;font-size:clamp(1.35rem,2vw,2rem);line-height:1.1}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--color-muted);font-size:.95rem}
+    .choices{display:grid;gap:10px}
+    .choice{width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid var(--color-border);background:var(--color-surface-offset);color:var(--color-text);min-height:52px}
+    .choice.correct{background:rgba(123,212,94,.15);border-color:var(--color-good)}
+    .choice.wrong{background:rgba(255,142,132,.13);border-color:var(--color-bad)}
+    .media-card{display:grid;gap:12px}
+    .clue{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:12px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface-offset)}
+    .clue img{width:120px;height:84px;object-fit:cover;border-radius:10px;background:#000}
+    .scoreboard{display:grid;gap:10px}
+    .player{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:14px;background:var(--color-surface-offset);border:1px solid var(--color-border)}
+    .player.active{outline:2px solid var(--color-primary)}
+    .player strong{font-variant-numeric:tabular-nums}
+    .interlude{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;padding:16px;z-index:40}
+    .interlude.open{display:grid}
+    .interlude-card{width:min(920px,100%);background:#061218;border:1px solid #284754;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .interlude-copy{padding:16px;color:#dff5f8}
+    video{width:100%;aspect-ratio:16/9;background:#000;display:block}
+    .footer-note{margin-top:14px;color:var(--color-faint);font-size:.9rem}
+    .setup{display:grid;gap:12px}
+    .setup-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .lang-switch{display:flex;gap:8px;flex-wrap:wrap}
+    .hidden{display:none!important}
+    @media (max-width: 920px){.grid{grid-template-columns:1fr}.hud{grid-template-columns:repeat(2,1fr)}.setup-row{grid-template-columns:1fr}.clue{grid-template-columns:1fr}.clue img{width:100%;height:180px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="Around the World Deluxe logo">
+          <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="3"></circle>
+          <path d="M10 32h44M32 4c8 7 13 17 13 28S40 53 32 60M32 4C24 11 19 21 19 32s5 21 13 28" stroke="currentColor" stroke-width="3"></path>
+          <path d="M20 18c7 4 17 4 24 0M20 46c7-4 17-4 24 0" stroke="currentColor" stroke-width="3"></path>
+        </svg>
+        <div>
+          <h1 id="brandTitle">Around the World Deluxe</h1>
+          <p id="brandSub">Retro geography quiz for GitHub Pages, iPhone, and iPad</p>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="pill" id="themeToggle" aria-label="Toggle theme">Theme</button>
+        <button class="pill" data-lang="en">EN</button>
+        <button class="pill" data-lang="nl">NL</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <div class="panel-inner">
+          <div id="globeWrap">
+            <div id="globe"></div>
+          </div>
+          <div class="hud">
+            <div class="stat"><span id="labelRound">Round</span><strong id="roundStat">1 / 10</strong></div>
+            <div class="stat"><span id="labelMiles">Air miles</span><strong id="milesStat">5000</strong></div>
+            <div class="stat"><span id="labelTimer">Timer</span><strong id="timerStat">20</strong></div>
+            <div class="stat"><span id="labelLeader">Leader</span><strong id="leaderStat">—</strong></div>
+          </div>
+          <p class="footer-note" id="footerNote">Tip: tap Start first so iPhone and iPad allow sound and video playback.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-inner">
+          <div id="setupView" class="setup">
+            <div class="eyebrow">Multiplayer setup</div>
+            <h2 id="setupTitle">Choose players and begin the trip</h2>
+            <div class="setup-row">
+              <label><span id="playersLabel">Players</span><br><select id="playerCount" class="pill"><option>1</option><option>2</option><option selected>3</option></select></label>
+              <label><span id="roundsLabel">Rounds</span><br><select id="roundCount" class="pill"><option>8</option><option selected>10</option><option>12</option></select></label>
+              <label><span id="difficultyLabel">Difficulty</span><br><select id="difficulty" class="pill"><option value="mixed">Mixed</option><option value="easy">Easy</option><option value="hard">Hard</option></select></label>
+            </div>
+            <div class="setup-row">
+              <input id="p1" class="pill" value="Player 1" aria-label="Player 1 name" />
+              <input id="p2" class="pill" value="Player 2" aria-label="Player 2 name" />
+              <input id="p3" class="pill" value="Player 3" aria-label="Player 3 name" />
+            </div>
+            <div class="lang-switch">
+              <button id="startBtn" class="btn primary">Start game</button>
+              <button id="demoBtn" class="btn gold">Quick demo</button>
+            </div>
+          </div>
+
+          <div id="gameView" class="hidden">
+            <div class="question-card">
+              <div class="eyebrow" id="categoryLabel">Category</div>
+              <h2 id="questionText">Question</h2>
+              <div class="meta">
+                <span id="turnLabel">Turn: Player</span>
+                <span id="difficultyMeta">Difficulty: Mixed</span>
+              </div>
+              <div id="clueWrap" class="media-card hidden">
+                <div class="clue">
+                  <img id="clueImage" alt="Question clue" loading="lazy" width="120" height="84">
+                  <div>
+                    <strong id="clueTitle">Clue</strong>
+                    <p id="clueCaption"></p>
+                  </div>
+                </div>
+              </div>
+              <div id="choices" class="choices"></div>
+              <div class="scoreboard" id="scoreboard"></div>
+              <div class="lang-switch">
+                <button id="nextBtn" class="btn primary hidden">Next question</button>
+                <button id="restartBtn" class="btn">New game</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="interlude" class="interlude" aria-hidden="true">
+    <div class="interlude-card">
+      <video id="interludeVideo" playsinline muted loop preload="metadata" controls></video>
+      <div class="interlude-copy">
+        <h2 id="interludeTitle">Travel interlude</h2>
+        <p id="interludeText">A silly pit stop before the next leg of the journey.</p>
+        <button id="closeInterlude" class="btn gold">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    const STRINGS = {
+      en: {
+        brandSub:'Retro geography quiz for GitHub Pages, iPhone, and iPad', setupTitle:'Choose players and begin the trip', players:'Players', rounds:'Rounds', difficulty:'Difficulty', start:'Start game', demo:'Quick demo', round:'Round', miles:'Air miles', timer:'Timer', leader:'Leader', footer:'Tip: tap Start first so iPhone and iPad allow sound and video playback.',
+        next:'Next question', restart:'New game', turn:'Turn', difficultyMeta:'Difficulty', travel:'Travel interlude', travelText:'A silly pit stop before the next leg of the journey.', continue:'Continue', final:'Final results', winner:'Winner', clue:'Clue', categories:{capitals:'Capitals', flags:'Flags', landmarks:'Landmarks', rivers:'Rivers', landforms:'Landforms'}, easy:'Easy', hard:'Hard', mixed:'Mixed'
+      },
+      nl: {
+        brandSub:'Retro aardrijkskundequiz voor GitHub Pages, iPhone en iPad', setupTitle:'Kies spelers en begin de reis', players:'Spelers', rounds:'Rondes', difficulty:'Moeilijkheid', start:'Start spel', demo:'Snelle demo', round:'Ronde', miles:'Vliegmijlen', timer:'Timer', leader:'Koploper', footer:'Tip: tik eerst op Start zodat iPhone en iPad geluid en video toestaan.',
+        next:'Volgende vraag', restart:'Nieuw spel', turn:'Beurt', difficultyMeta:'Moeilijkheid', travel:'Reisfilmpje', travelText:'Een gek tussenfilmpje voor het volgende deel van de reis.', continue:'Verder', final:'Eindstand', winner:'Winnaar', clue:'Hint', categories:{capitals:'Hoofdsteden', flags:'Vlaggen', landmarks:'Bezienswaardigheden', rivers:'Rivieren', landforms:'Landschappen'}, easy:'Makkelijk', hard:'Moeilijk', mixed:'Gemengd'
+      }
+    };
+
+    const INTERLUDES = [
+      { title:'Runway refuel', text:'A scenic pit stop for your next journey.', src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
+      { title:'Harbor transfer', text:'A quick transfer between sea lanes and city streets.', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+      { title:'Station break', text:'A cheerful pause before the next departure.', src:'https://www.w3schools.com/html/movie.mp4' }
+    ];
+
+    const QUESTIONS = [
+      {cat:'capitals', diff:'easy', q:{en:'What is the capital of Canada?', nl:'Wat is de hoofdstad van Canada?'}, choices:['Ottawa','Toronto','Vancouver','Montreal'], answer:0, lat:45.4215, lon:-75.6972, year:1867, fact:{en:'Canada chose Ottawa as capital in the 19th century.', nl:'Canada koos Ottawa als hoofdstad in de 19e eeuw.'}},
+      {cat:'capitals', diff:'easy', q:{en:'What is the capital of Australia?', nl:'Wat is de hoofdstad van Australië?'}, choices:['Sydney','Canberra','Melbourne','Perth'], answer:1, lat:-35.2809, lon:149.13},
+      {cat:'capitals', diff:'hard', q:{en:'What is the capital of Kazakhstan?', nl:'Wat is de hoofdstad van Kazachstan?'}, choices:['Almaty','Astana','Shymkent','Aktobe'], answer:1, lat:51.1694, lon:71.4491},
+      {cat:'flags', diff:'easy', q:{en:'Which country uses this maple leaf flag?', nl:'Welk land gebruikt deze vlag met esdoornblad?'}, choices:['Austria','Canada','Peru','Denmark'], answer:1, lat:56.1304, lon:-106.3468, clue:{img:'https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg', caption:{en:'National flag clue', nl:'Hint van de nationale vlag'}}},
+      {cat:'flags', diff:'easy', q:{en:'Which country has this circle-on-white flag?', nl:'Welk land heeft deze witte vlag met rode cirkel?'}, choices:['Bangladesh','Japan','South Korea','Indonesia'], answer:1, lat:35.6762, lon:139.6503, clue:{img:'https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg', caption:{en:'National flag clue', nl:'Hint van de nationale vlag'}}},
+      {cat:'landmarks', diff:'easy', q:{en:'In which city is the Eiffel Tower?', nl:'In welke stad staat de Eiffeltoren?'}, choices:['Lyon','Paris','Brussels','Geneva'], answer:1, lat:48.8584, lon:2.2945, clue:{img:'https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg', caption:{en:'Famous landmark clue', nl:'Hint van bekende bezienswaardigheid'}}},
+      {cat:'landmarks', diff:'hard', q:{en:'Machu Picchu is located in which country?', nl:'In welk land ligt Machu Picchu?'}, choices:['Chile','Bolivia','Peru','Ecuador'], answer:2, lat:-13.1631, lon:-72.545},
+      {cat:'rivers', diff:'easy', q:{en:'Which river flows through Egypt?', nl:'Welke rivier stroomt door Egypte?'}, choices:['Amazon','Yangtze','Nile','Danube'], answer:2, lat:30.0444, lon:31.2357},
+      {cat:'rivers', diff:'hard', q:{en:'Which river passes through Budapest?', nl:'Welke rivier stroomt door Boedapest?'}, choices:['Rhine','Danube','Seine','Po'], answer:1, lat:47.4979, lon:19.0402},
+      {cat:'landforms', diff:'easy', q:{en:'Which mountain range forms a natural barrier in South America?', nl:'Welke bergketen vormt een natuurlijke barrière in Zuid-Amerika?'}, choices:['Rockies','Andes','Alps','Himalayas'], answer:1, lat:-32.6532, lon:-70.0112},
+      {cat:'landforms', diff:'hard', q:{en:'The Great Rift Valley stretches mainly across which continent?', nl:'Over welk continent loopt de Grote Slenk vooral?'}, choices:['Asia','Africa','Europe','North America'], answer:1, lat:-1.2864, lon:36.8172},
+      {cat:'capitals', diff:'hard', q:{en:'What is the capital of Bhutan?', nl:'Wat is de hoofdstad van Bhutan?'}, choices:['Thimphu','Paro','Dhaka','Kathmandu'], answer:0, lat:27.4728, lon:89.639},
+      {cat:'flags', diff:'hard', q:{en:'Which Nordic country uses this blue cross on yellow flag?', nl:'Welk Noord-Europees land gebruikt deze blauwe kruisvlag op geel?'}, choices:['Norway','Finland','Sweden','Iceland'], answer:2, lat:59.3293, lon:18.0686, clue:{img:'https://upload.wikimedia.org/wikipedia/en/4/4c/Flag_of_Sweden.svg', caption:{en:'National flag clue', nl:'Hint van de nationale vlag'}}},
+      {cat:'landmarks', diff:'easy', q:{en:'The Colosseum is in which city?', nl:'In welke stad staat het Colosseum?'}, choices:['Athens','Rome','Milan','Naples'], answer:1, lat:41.8902, lon:12.4922},
+      {cat:'landforms', diff:'hard', q:{en:'Which desert covers much of northern Africa?', nl:'Welke woestijn bedekt een groot deel van Noord-Afrika?'}, choices:['Gobi','Kalahari','Sahara','Atacama'], answer:2, lat:23.4162, lon:25.6628}
+    ];
+
+    const state = { lang:'en', players:[], current:0, round:1, totalRounds:10, activePlayer:0, timer:20, baseMiles:5000, remainingMiles:5000, answered:false, questions:[], audioReady:false };
+    const $ = sel => document.querySelector(sel);
+    const els = {
+      setupView:$('#setupView'), gameView:$('#gameView'), choices:$('#choices'), question:$('#questionText'), category:$('#categoryLabel'), turn:$('#turnLabel'), diffMeta:$('#difficultyMeta'),
+      round:$('#roundStat'), miles:$('#milesStat'), timer:$('#timerStat'), leader:$('#leaderStat'), scoreboard:$('#scoreboard'), next:$('#nextBtn'), restart:$('#restartBtn'), clueWrap:$('#clueWrap'), clueImage:$('#clueImage'), clueCaption:$('#clueCaption'), clueTitle:$('#clueTitle'), interlude:$('#interlude'), interludeVideo:$('#interludeVideo')
+    };
+    let countdown, synth, renderer, scene, camera, globe, pin;
+    const AUDIO_FRAGMENTS = ['https://cdn.pixabay.com/download/audio/2022/03/15/audio_8b1d3df0d8.mp3?filename=travel-ambient-110836.mp3','https://cdn.pixabay.com/download/audio/2022/03/15/audio_3c0c0d7f2e.mp3?filename=travel-whoosh-110838.mp3'];
+
+    function applyStrings(){
+      const t = STRINGS[state.lang];
+      $('#brandSub').textContent=t.brandSub; $('#setupTitle').textContent=t.setupTitle; $('#playersLabel').textContent=t.players; $('#roundsLabel').textContent=t.rounds; $('#difficultyLabel').textContent=t.difficulty;
+      $('#startBtn').textContent=t.start; $('#demoBtn').textContent=t.demo; $('#labelRound').textContent=t.round; $('#labelMiles').textContent=t.miles; $('#labelTimer').textContent=t.timer; $('#labelLeader').textContent=t.leader; $('#footerNote').textContent=t.footer; els.next.textContent=t.next; els.restart.textContent=t.restart;
+      $('#interludeTitle').textContent=t.travel; $('#interludeText').textContent=t.travelText; $('#closeInterlude').textContent=t.continue;
+    }
+
+    function shuffled(arr){ return [...arr].sort(()=>Math.random()-.5); }
+    function buildGame(demo=false){
+      const count = +$('#playerCount').value;
+      state.players = [$('#p1').value, $('#p2').value, $('#p3').value].slice(0,count).map((name,i)=>({name:name||`Player ${i+1}`, score:0}));
+      state.totalRounds = demo ? 5 : +$('#roundCount').value;
+      state.round = 1; state.current = 0; state.activePlayer = 0;
+      const diff = $('#difficulty').value;
+      const basePool = QUESTIONS.filter(q => diff==='mixed' ? true : q.diff===diff);
+      const varied = shuffled(basePool).concat(shuffled(QUESTIONS.filter(q => !basePool.includes(q))));
+      state.questions = varied.slice(0, state.totalRounds);
+      els.setupView.classList.add('hidden'); els.gameView.classList.remove('hidden');
+      ensureAudio(); nextQuestion(true);
+    }
+
+    function ensureAudio(){ if(!state.audioReady){ synth = window.speechSynthesis; state.audioReady = true; beep(440,.06); }}
+    function beep(freq=440,dur=.1,type='sine'){ try{ const ctx = window._ctx || (window._ctx = new (window.AudioContext||window.webkitAudioContext)()); const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination); g.gain.value=.04; o.start(); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+dur); o.stop(ctx.currentTime+dur);}catch(e){} }
+    function speak(text){
+      if(!('speechSynthesis' in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = state.lang==='nl' ? 'nl-NL' : 'en-US';
+      u.rate = state.lang==='nl' ? 0.98 : 0.94;
+      u.pitch = 1.15;
+      u.volume = 1;
+      const voices = (speechSynthesis.getVoices && speechSynthesis.getVoices()) || [];
+      const candidates = voices.filter(v => (state.lang==='nl' ? /^nl/i.test(v.lang) : /^en/i.test(v.lang)));
+      const preferred = candidates.find(v => /(Samantha|Daniel|Karen|Tessa|Nicky|Moira|Fred|Siri|Microsoft|Google|Natural)/i.test(v.name)) || candidates[0];
+      if (preferred) u.voice = preferred;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }
+
+    function tick(){
+      els.timer.textContent = state.timer; els.miles.textContent = Math.max(500, state.remainingMiles).toLocaleString();
+      if(state.timer <= 0){ clearInterval(countdown); lockChoices(-1); return; }
+      state.timer -= 1; state.remainingMiles = Math.max(500, state.remainingMiles - 225);
+    }
+
+    function renderQuestion(q){
+      const t = STRINGS[state.lang];
+      els.category.textContent = t.categories[q.cat] || q.cat; els.question.textContent = q.q[state.lang];
+      els.turn.textContent = `${t.turn}: ${state.players[state.activePlayer].name}`; els.diffMeta.textContent = `${t.difficultyMeta}: ${t[q.diff] || q.diff}`;
+      els.round.textContent = `${state.round} / ${state.totalRounds}`; renderScoreboard();
+      if(q.clue){ els.clueWrap.classList.remove('hidden'); els.clueImage.src = q.clue.img; els.clueCaption.textContent = q.clue.caption[state.lang]; els.clueTitle.textContent = t.clue; }
+      else if(q.fact){ els.clueWrap.classList.remove('hidden'); els.clueImage.removeAttribute('src'); els.clueImage.alt=''; els.clueTitle.textContent = t.clue; els.clueCaption.textContent = q.fact[state.lang] + (q.year ? ` · ${q.year}` : ''); }
+      else { els.clueWrap.classList.add('hidden'); }
+      els.choices.innerHTML=''; q.choices.forEach((choice,index)=>{ const btn=document.createElement('button'); btn.className='choice'; btn.textContent=choice; btn.addEventListener('click',()=>lockChoices(index)); els.choices.appendChild(btn); });
+      updateLeader();
+    }
+
+    function lockChoices(selected){
+      if(state.answered) return; state.answered=true; clearInterval(countdown);
+      const q = state.questions[state.current]; const buttons=[...document.querySelectorAll('.choice')];
+      buttons.forEach((btn,i)=>{ btn.disabled=true; if(i===q.answer) btn.classList.add('correct'); if(i===selected && i!==q.answer) btn.classList.add('wrong'); });
+      if(selected===q.answer){
+        const gain = Math.max(500,state.remainingMiles); state.players[state.activePlayer].score += gain; beep(660,.08,'triangle'); beep(880,.12,'triangle');
+        const cheers = state.lang==='nl'
+          ? [
+              `Wow, geweldig, ${state.players[state.activePlayer].name}!`,
+              `Fantastisch, ${state.players[state.activePlayer].name} — je kent je topografie!`,
+              `Amazing, ${state.players[state.activePlayer].name}! Je hebt echt verstand van aardrijkskunde.`
+            ]
+          : [
+              `Wow, amazing, ${state.players[state.activePlayer].name}!`,
+              `You really know your stuff, ${state.players[state.activePlayer].name}!`,
+              `Fantastic answer, ${state.players[state.activePlayer].name} — great geography brain!`
+            ];
+        speak(cheers[Math.floor(Math.random()*cheers.length)]);
+      } else {
+        beep(240,.14,'sawtooth');
+        const misses = state.lang==='nl'
+          ? [`Bijna! Het juiste antwoord is ${q.choices[q.answer]}.`,`Niet deze keer. Het juiste antwoord is ${q.choices[q.answer]}.`]
+          : [`Close! The correct answer is ${q.choices[q.answer]}.`,`Not quite. The correct answer is ${q.choices[q.answer]}.`];
+        speak(misses[Math.floor(Math.random()*misses.length)]);
+      }
+      renderScoreboard(); updateLeader(); els.next.classList.remove('hidden');
+      if((state.current + 1) % state.players.length === 0 || state.current === state.questions.length - 1){ setTimeout(showInterlude, 900); }
+    }
+function renderScoreboard(){
+      els.scoreboard.innerHTML='';
+      state.players.forEach((p,i)=>{ const row=document.createElement('div'); row.className='player'+(i===state.activePlayer?' active':''); row.innerHTML=`<span>${p.name}</span><strong>${p.score.toLocaleString()}</strong>`; els.scoreboard.appendChild(row); });
+    }
+    function updateLeader(){ const leader=[...state.players].sort((a,b)=>b.score-a.score)[0]; els.leader.textContent = leader ? leader.name : '—'; }
+    function renderFinal(){
+      const t = STRINGS[state.lang]; const winner=[...state.players].sort((a,b)=>b.score-a.score)[0];
+      els.category.textContent=t.final; els.question.textContent=`${t.winner}: ${winner.name}`; els.turn.textContent=''; els.diffMeta.textContent=''; els.choices.innerHTML=''; els.clueWrap.classList.add('hidden'); els.next.classList.add('hidden'); renderScoreboard(); updateLeader();
+      speak(state.lang==='nl' ? `Winnaar is ${winner.name}` : `Winner is ${winner.name}`);
+    }
+    function showInterlude(){ const item=INTERLUDES[(state.current) % INTERLUDES.length]; $('#interludeTitle').textContent=item.title; $('#interludeText').textContent=item.text; els.interludeVideo.src=item.src; els.interlude.classList.add('open'); els.interlude.setAttribute('aria-hidden','false'); const playVideo=()=>els.interludeVideo.play().catch(()=>{}); if(els.interludeVideo.readyState>=1) playVideo(); else els.interludeVideo.addEventListener('loadedmetadata', playVideo, { once:true }); }
+    function closeInterlude(){ els.interlude.classList.remove('open'); els.interlude.setAttribute('aria-hidden','true'); els.interludeVideo.pause(); els.interludeVideo.removeAttribute('src'); els.interludeVideo.load(); }
+
+    function initGlobe(){
+      const mount = document.getElementById('globe');
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 1000);
+      camera.position.set(0,0,5);
+      renderer = new THREE.WebGLRenderer({antialias:true, alpha:true}); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(mount.clientWidth, mount.clientHeight); mount.appendChild(renderer.domElement);
+      const ambient = new THREE.AmbientLight(0xffffff, 1.15); scene.add(ambient);
+      const dir = new THREE.DirectionalLight(0xaeefff, 1.4); dir.position.set(5,2,5); scene.add(dir);
+      const globeGeo = new THREE.SphereGeometry(1.4, 48, 48);
+      const globeMat = new THREE.MeshStandardMaterial({color:0x2f7480, metalness:0.1, roughness:0.85, emissive:0x0e2228, emissiveIntensity:0.45});
+      globe = new THREE.Mesh(globeGeo, globeMat); scene.add(globe);
+      const wire = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(1.405, 18, 18)), new THREE.LineBasicMaterial({color:0xf1b84a, transparent:true, opacity:.2})); scene.add(wire);
+      const starGeo = new THREE.BufferGeometry(); const verts=[]; for(let i=0;i<600;i++){ const r=15; verts.push((Math.random()-.5)*r,(Math.random()-.5)*r,(Math.random()-.5)*r); } starGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts,3)); const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:0.03})); scene.add(stars);
+      pin = new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16), new THREE.MeshBasicMaterial({color:0xf1b84a})); scene.add(pin);
+      function animate(){ requestAnimationFrame(animate); globe.rotation.y += 0.0025; wire.rotation.y += 0.0025; renderer.render(scene,camera); } animate();
+      window.addEventListener('resize', ()=>{ const w=mount.clientWidth,h=mount.clientHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h); });
+    }
+    function latLonToVector3(lat,lon,r=1.48){ const phi=(90-lat)*(Math.PI/180), theta=(lon+180)*(Math.PI/180); return new THREE.Vector3(-(r*Math.sin(phi)*Math.cos(theta)), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta)); }
+    function rotateTo(lat,lon){ if(!globe) return; const v = latLonToVector3(lat,lon); pin.position.copy(v); }
+
+    document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>{ state.lang = btn.dataset.lang; applyStrings(); if(!els.setupView.classList.contains('hidden')===false || state.questions.length===0) return; renderQuestion(state.questions[state.current]); }));
+    $('#themeToggle').addEventListener('click',()=>{ document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; });
+    $('#startBtn').addEventListener('click',()=>buildGame(false));
+    $('#demoBtn').addEventListener('click',()=>buildGame(true));
+    els.next.addEventListener('click',()=>{ closeInterlude(); nextQuestion(false); });
+    els.restart.addEventListener('click',()=>location.reload());
+    $('#closeInterlude').addEventListener('click',()=>{ closeInterlude(); });
+    applyStrings(); initGlobe();
+  </script>
+</body>
+</html>
